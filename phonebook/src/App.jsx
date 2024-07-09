@@ -56,9 +56,9 @@ const AddContact = ({ persons, setPersons, setSuccessNotification, setErrorNotif
                     setTimeout(() => setSuccessNotification(null), 1500)
                 })
                 .catch((error) => {
-                    console.error('Error adding person:', error)
-                    setErrorNotification('An error occurred while adding the person.')
-                    setTimeout(() => setErrorNotification(null), 1500)
+                    let errorMessage = error.response.data.error
+                    setErrorNotification(errorMessage)
+                    setTimeout(() => setErrorNotification(null), 5000)
                 })
         }
 
@@ -147,13 +147,20 @@ const FilterContacts = ({
     setSuccessNotification,
     setErrorNotification,
 }) => {
-    const results = persons.filter((person) =>
-        person.name.toLowerCase().includes(search.toLowerCase())
+    const results = persons.filter(
+        (person) =>
+            person.name.toLowerCase().includes(search.toLowerCase())
     )
 
-    if (search !== '' && results.length === 0) {
-        setErrorNotification('No results found')
-    }
+
+    useEffect(() => {
+        if (search !== '' && results.length === 0) {
+            setErrorNotification('No results found')
+            setTimeout(() => {
+                setErrorNotification(null)
+            }, 500)
+        }
+    }, [search, results, setErrorNotification])
 
     const handleDelete = ({ person }) => {
         if (window.confirm(`Delete ${person.name}?`)) {
@@ -185,21 +192,29 @@ const FilterContacts = ({
                 <h2>Contacts</h2>
             </div>
             <ul>
-                {results.length > 0
-                    ? results.map((person) => (
-                          <DisplayContacts
-                              key={person.id}
-                              person={person}
-                              handleDelete={handleDelete}
-                          />
-                      ))
-                    : persons.map((person) => (
-                          <DisplayContacts
-                              key={person.id}
-                              person={person}
-                              handleDelete={handleDelete}
-                          />
-                      ))}
+                {search !== '' ? (
+                    results.length > 0 ? (
+                        results.map((person) => (
+                            <DisplayContacts
+                                key={person.id}
+                                person={person}
+                                handleDelete={handleDelete}
+                            />
+                        ))
+                    ) : (
+                        <li className='main'>No results</li>
+                    )
+                ) : persons.length > 0 ? (
+                    persons.map((person) => (
+                        <DisplayContacts
+                            key={person.id}
+                            person={person}
+                            handleDelete={handleDelete}
+                        />
+                    ))
+                ) : (
+                    <li className='main'>No contacts</li>
+                )}
             </ul>
         </div>
     )
